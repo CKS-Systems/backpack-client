@@ -36,8 +36,8 @@ const instructions = {
       "fillHistoryQueryAll",
       { url: `${BASE_URL}wapi/v1/history/fills`, method: "GET" },
     ],
-    ["orderCancel", { url: `${BASE_URL}api/v1/order`, method: "DEL" }],
-    ["orderCancelAll", { url: `${BASE_URL}api/v1/order`, method: "DEL" }],
+    ["orderCancel", { url: `${BASE_URL}api/v1/order`, method: "DELETE" }],
+    ["orderCancelAll", { url: `${BASE_URL}api/v1/order`, method: "DELETE" }],
     ["orderExecute", { url: `${BASE_URL}api/v1/order`, method: "POST" }],
     [
       "orderHistoryQueryAll",
@@ -94,7 +94,7 @@ const getMessageSignature = (
   function alphabeticalSort(a: string, b: string) {
     return a.localeCompare(b);
   }
-  
+
   const message = qs.stringify(request, { sort: alphabeticalSort });
 
   const headerInfo = { timestamp, window: window ?? DEFAULT_TIMEOUT_MS };
@@ -120,20 +120,24 @@ const rawRequest = async (
   headers: object,
   data: object
 ) => {
-  headers["User-Agent"] = "Backpack Typescript API Client";
-  headers["Content-Type"] = "application/x-www-form-urlencoded";
-
-  const options = { headers };
   const { url, method } = instructions.private.has(instruction)
     ? instructions.private.get(instruction)!
     : instructions.public.get(instruction)!;
   let fullUrl = url;
 
+  headers["User-Agent"] = "Backpack Typescript API Client";
+  headers["Content-Type"] =
+    method == "GET"
+      ? "application/x-www-form-urlencoded"
+      : "application/json; charset=utf-8";
+
+  const options = { headers };
+
   if (method == "GET") {
     Object.assign(options, { method });
     fullUrl =
       url + (Object.keys(data).length > 0 ? "?" + qs.stringify(data) : "");
-  } else if (method == "POST" || method == "DEL") {
+  } else if (method == "POST" || method == "DELETE") {
     Object.assign(options, {
       method,
       body: qs.stringify(data),
@@ -143,12 +147,11 @@ const rawRequest = async (
   const response = await got(fullUrl, options as OptionsOfTextResponseBody);
   const contentType = response.headers["content-type"];
   if (contentType?.includes("application/json")) {
-    const parsed = JSON.parse(response.body,
-      function(_key, value) {
-        if (isNaN(Number(value))) {
-          return value;
-        }
-        return Number(value);
+    const parsed = JSON.parse(response.body, function (_key, value) {
+      if (isNaN(Number(value))) {
+        return value;
+      }
+      return Number(value);
     });
 
     if (parsed.error && parsed.error.length) {
@@ -257,7 +260,10 @@ export class BackpackClient {
    * @param  {Object}   params      Arguments to pass to the api call
    * @return {Object}               The response object
    */
-  private async privateMethod(instruction: string, params: any = {}): Promise<object> {
+  private async privateMethod(
+    instruction: string,
+    params: any = {}
+  ): Promise<object> {
     const timestamp = Date.now();
     const signature = getMessageSignature(
       params,
@@ -614,7 +620,7 @@ export type WithdrawalsResponse = {
   toAddress: string;
   transactionHash?: string;
   createdAt: string;
-};
+}[];
 
 export type AssetsResponse = {
   symbol: string;
