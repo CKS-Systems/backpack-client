@@ -143,7 +143,6 @@ const rawRequest = async (
       body: JSON.stringify(data),
     });
   }
-  console.log('requesting from', fullUrl, 'with', options);
   const response = await got(fullUrl, options as OptionsOfTextResponseBody);
   const contentType = response.headers["content-type"];
   if (contentType?.includes("application/json")) {
