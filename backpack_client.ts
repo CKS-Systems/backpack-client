@@ -228,7 +228,8 @@ export class BackpackClient {
             numTry,
             backOff,
           },
-          e.toString()
+          e.toString(),
+          e.response && e.response.body ? e.response.body : ''
         );
         await new Promise((resolve) => setTimeout(resolve, backOff * 1_000));
         return await this.api(method, params, retrysLeft - 1);
