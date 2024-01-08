@@ -37,14 +37,14 @@ const instructions = {
       { url: `${BASE_URL}wapi/v1/history/fills`, method: "GET" },
     ],
     ["orderCancel", { url: `${BASE_URL}api/v1/order`, method: "DELETE" }],
-    ["orderCancelAll", { url: `${BASE_URL}api/v1/order`, method: "DELETE" }],
+    ["orderCancelAll", { url: `${BASE_URL}api/v1/orders`, method: "DELETE" }],
     ["orderExecute", { url: `${BASE_URL}api/v1/order`, method: "POST" }],
     [
       "orderHistoryQueryAll",
       { url: `${BASE_URL}wapi/v1/history/orders`, method: "GET" },
     ],
     ["orderQuery", { url: `${BASE_URL}api/v1/order`, method: "GET" }],
-    ["orderQueryAll", { url: `${BASE_URL}api/v1/order`, method: "GET" }],
+    ["orderQueryAll", { url: `${BASE_URL}api/v1/orders`, method: "GET" }],
     [
       "withdraw",
       { url: `${BASE_URL}wapi/v1/capital/withdrawals`, method: "POST" },
@@ -129,7 +129,7 @@ const rawRequest = async (
   headers["Content-Type"] =
     method == "GET"
       ? "application/x-www-form-urlencoded"
-      : "application/json";
+      : "application/json; charset=utf-8";
 
   const options = { headers };
 
@@ -228,7 +228,8 @@ export class BackpackClient {
             numTry,
             backOff,
           },
-          e.toString()
+          e.toString(),
+          e.response && e.response.body ? e.response.body : ''
         );
         await new Promise((resolve) => setTimeout(resolve, backOff * 1_000));
         return await this.api(method, params, retrysLeft - 1);
@@ -284,8 +285,8 @@ export class BackpackClient {
   /**
    * https://docs.backpack.exchange/#tag/Capital/operation/get_balances
    */
-  async Balance(params?: BalanceRequest): Promise<BalanceResponse> {
-    return this.api("balanceQuery", params) as unknown as BalanceResponse;
+  async Balance(): Promise<BalanceResponse> {
+    return this.api("balanceQuery") as unknown as BalanceResponse;
   }
   /**
    * https://docs.backpack.exchange/#tag/Capital/operation/get_deposits
@@ -393,7 +394,7 @@ export class BackpackClient {
    * https://docs.backpack.exchange/#tag/Order/operation/get_open_orders
    */
   async GetOpenOrders(
-    params: GetOpenOrdersRequest
+    params?: GetOpenOrdersRequest
   ): Promise<GetOpenOrdersResponse> {
     return this.api(
       "orderQueryAll",
@@ -497,9 +498,6 @@ export type MarketOrder = {
   createdAt: number;
 };
 
-export type BalanceRequest = {
-  subaccountId?: number;
-};
 export type BalanceResponse = {
   [property: string]: {
     available: number;
@@ -509,7 +507,6 @@ export type BalanceResponse = {
 };
 
 export type DepositsRequest = {
-  subaccountId?: number;
   limit?: number;
   offset?: number;
 };
@@ -535,7 +532,6 @@ export type DepositsResponse = {
     | "initiated"
     | "received"
     | "refunded";
-  subaccountId?: number;
   symbol: string;
   quantity: number;
   createdAt: string;
@@ -543,7 +539,6 @@ export type DepositsResponse = {
 
 export type DepositAddressRequest = {
   blockchain: Blockchain;
-  subaccountId?: number;
 };
 export type DepositAddressResponse = {
   address: string;
@@ -559,7 +554,6 @@ export type WithdrawRequest = {
 };
 
 export type OrderHistoryRequest = {
-  subaccountId?: number;
   limit?: number;
   offset?: number;
 };
@@ -581,7 +575,6 @@ export type OrderHistoryResponse = {
 }[];
 
 export type FillHistoryRequest = {
-  subaccountId?: number;
   orderId?: string;
   symbol?: string;
   limit?: number;
@@ -602,7 +595,6 @@ export type FillHistoryResponse = {
 }[];
 
 export type WithdrawalsRequest = {
-  subaccountId?: number;
   limit?: number;
   offset?: number;
 };
@@ -615,7 +607,6 @@ export type WithdrawalsResponse = {
   fee: number;
   symbol: string;
   status: "pending" | "confirmed" | "verifying" | "void";
-  subaccountId?: number;
   toAddress: string;
   transactionHash?: string;
   createdAt: string;
@@ -716,13 +707,12 @@ export type GetOrderRequest = {
   clientId?: number;
   orderId?: string;
   symbol: string;
-  subaccountId: number;
 };
 export type GetOrderResponse = LimitOrder | MarketOrder;
 
 export type ExecuteOrderRequest = {
   clientId?: number;
-  orderType: "limit" | "market";
+  orderType: "Limit" | "Market";
   postOnly?: boolean;
   price?: number;
   quantity?: number;
@@ -754,7 +744,6 @@ export type CancelOrderResponse =
 
 export type GetOpenOrdersRequest = {
   symbol?: string;
-  subaccountId?: number;
 };
 export type GetOpenOrdersResponse = (LimitOrder | MarketOrder)[];
 
