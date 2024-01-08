@@ -3,7 +3,7 @@ import crypto from "crypto";
 import qs from "qs";
 
 const BACKOFF_EXPONENT = 1.5;
-const DEFAULT_TIMEOUT_MS = 5_000;
+const DEFAULT_TIMEOUT_MS = 600_000;
 const BASE_URL = "https://api.backpack.exchange/";
 
 const instructions = {
@@ -129,7 +129,7 @@ const rawRequest = async (
   headers["Content-Type"] =
     method == "GET"
       ? "application/x-www-form-urlencoded"
-      : "application/json; charset=utf-8";
+      : "application/json";
 
   const options = { headers };
 
@@ -140,10 +140,9 @@ const rawRequest = async (
   } else if (method == "POST" || method == "DELETE") {
     Object.assign(options, {
       method,
-      body: qs.stringify(data),
+      body: JSON.stringify(data),
     });
   }
-
   const response = await got(fullUrl, options as OptionsOfTextResponseBody);
   const contentType = response.headers["content-type"];
   if (contentType?.includes("application/json")) {
@@ -273,7 +272,7 @@ export class BackpackClient {
     );
     const headers = {
       "X-Timestamp": timestamp,
-      "X-Window": this.config.timeout,
+      "X-Window": this.config.timeout ?? DEFAULT_TIMEOUT_MS,
       "X-API-Key": this.config.publicKey,
       "X-Signature": signature,
     };
