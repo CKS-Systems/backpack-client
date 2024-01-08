@@ -3,7 +3,7 @@ import crypto from "crypto";
 import qs from "qs";
 
 const BACKOFF_EXPONENT = 1.5;
-const DEFAULT_TIMEOUT_MS = 600_000;
+const DEFAULT_TIMEOUT_MS = 5_000;
 const BASE_URL = "https://api.backpack.exchange/";
 
 const instructions = {
