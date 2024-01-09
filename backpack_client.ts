@@ -147,6 +147,9 @@ const rawRequest = async (
   const contentType = response.headers["content-type"];
   if (contentType?.includes("application/json")) {
     const parsed = JSON.parse(response.body, function (_key, value) {
+      if (value instanceof Array && value.length == 0) {
+        return value;
+      }
       if (isNaN(Number(value))) {
         return value;
       }
