@@ -582,6 +582,7 @@ export type FillHistoryRequest = {
 };
 export type FillHistoryResponse = {
   id: number;
+  tradeId: number;
   orderId: number;
   symbol: string;
   side: "Bid" | "Ask";
@@ -589,7 +590,6 @@ export type FillHistoryResponse = {
   quantity: number;
   fee: number;
   feeSymbol: string;
-  otherOrderId: number;
   isMaker: boolean;
   timestamp: string;
 }[];
