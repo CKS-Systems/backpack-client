@@ -518,7 +518,7 @@ export type DepositsResponse = {
   toAddress?: string;
   fromAddress?: string;
   confirmationBlockNumber?: number;
-  identifier: string;
+  providerId?: string;
   source:
     | "administrator"
     | "solana"
@@ -537,6 +537,7 @@ export type DepositsResponse = {
     | "refunded";
   symbol: string;
   quantity: number;
+  transactionHash?: string;
   createdAt: string;
 }[];
 
