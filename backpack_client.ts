@@ -452,6 +452,36 @@ export class BackpackClient {
       params
     ) as unknown as HistoricalTradesResponse;
   }
+
+ /**
+   * https://docs.backpack.exchange/#tag/Streams/Private
+   * @return {Object} Websocket     Websocket connecting to private stream
+   */
+  subscribe(): WebSocket {
+    const privateStream = new WebSocket('wss://ws.backpack.exchange/stream');
+    const timestamp = Date.now();
+    const window = 5_000;
+    const signature = getMessageSignature(
+      {},
+      this.config.privateKey,
+      timestamp,
+      "subscribe",
+      window
+    );
+    const subscriptionData = {
+      method: 'SUBSCRIBE',
+      params: ["stream"],
+      "signature": [this.config.publicKey, signature, timestamp, window]
+    };
+    privateStream.onopen = (_) => {
+      console.log('Connected to BPX Websocket');
+      privateStream.send(JSON.stringify(subscriptionData));
+    };
+    privateStream.onerror = (error) => {
+      console.log(`Websocket Error ${error}`);
+    };
+    return privateStream;
+  }
 }
 
 export type Blockchain = "Solana" | "Ethereum" | "Polygon" | "Bitcoin";
