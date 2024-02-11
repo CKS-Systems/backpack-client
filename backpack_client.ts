@@ -457,7 +457,7 @@ export class BackpackClient {
    * https://docs.backpack.exchange/#tag/Streams/Private
    * @return {Object} Websocket     Websocket connecting to private stream
    */
-  subscribe(): WebSocket {
+  subscribePrivate(): WebSocket {
     const privateStream = new WebSocket('wss://ws.backpack.exchange/stream');
     const timestamp = Date.now();
     const window = 5_000;
