@@ -1,6 +1,7 @@
 import got, { OptionsOfTextResponseBody } from "got";
 import crypto from "crypto";
 import qs from "qs";
+import WebSocket from 'ws';
 
 const BACKOFF_EXPONENT = 1.5;
 const DEFAULT_TIMEOUT_MS = 5_000;
@@ -385,7 +386,7 @@ export class BackpackClient {
   async ExecuteOrder(
     params: ExecuteOrderRequest
   ): Promise<ExecuteOrderResponse> {
-    return this.api("orderExecute", params) as unknown as ExecuteOrderResponse;
+    return this.api("orderExecute", params, 0) as unknown as ExecuteOrderResponse;
   }
   /**
    * https://docs.backpack.exchange/#tag/Order/operation/cancel_order
@@ -451,6 +452,37 @@ export class BackpackClient {
       "tradesHistory",
       params
     ) as unknown as HistoricalTradesResponse;
+  }
+
+ /**
+   * https://docs.backpack.exchange/#tag/Streams/Private
+   * @return {Object} Websocket     Websocket connecting to order update stream
+   */
+  subscribeOrderUpdate(): WebSocket {
+    const privateStream = new WebSocket('wss://ws.backpack.exchange');
+    const timestamp = Date.now();
+    const window = 5_000;
+    const signature = getMessageSignature(
+      {},
+      this.config.privateKey,
+      timestamp,
+      "subscribe",
+      window
+    );
+    const subscriptionData = {
+      method: 'SUBSCRIBE',
+      params: ["account.orderUpdate"],
+      "signature": [this.config.publicKey, signature, timestamp.toString(), window.toString()]
+    };
+    privateStream.onopen = (_) => {
+      console.log('Connected to BPX Websocket');
+      privateStream.send(JSON.stringify(subscriptionData));
+    };
+    privateStream.onerror = (error) => {
+      console.log(`Websocket Error ${error}`);
+    };
+
+    return privateStream;
   }
 }
 
