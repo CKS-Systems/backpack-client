@@ -386,7 +386,7 @@ export class BackpackClient {
   async ExecuteOrder(
     params: ExecuteOrderRequest
   ): Promise<ExecuteOrderResponse> {
-    return this.api("orderExecute", params) as unknown as ExecuteOrderResponse;
+    return this.api("orderExecute", params, 0) as unknown as ExecuteOrderResponse;
   }
   /**
    * https://docs.backpack.exchange/#tag/Order/operation/cancel_order
@@ -456,10 +456,10 @@ export class BackpackClient {
 
  /**
    * https://docs.backpack.exchange/#tag/Streams/Private
-   * @return {Object} Websocket     Websocket connecting to private stream
+   * @return {Object} Websocket     Websocket connecting to order update stream
    */
   subscribeOrderUpdate(): WebSocket {
-    const privateStream = new WebSocket('wss://ws.backpack.exchange/stream');
+    const privateStream = new WebSocket('wss://ws.backpack.exchange');
     const timestamp = Date.now();
     const window = 5_000;
     const signature = getMessageSignature(
@@ -472,7 +472,7 @@ export class BackpackClient {
     const subscriptionData = {
       method: 'SUBSCRIBE',
       params: ["account.orderUpdate"],
-      "signature": [this.config.publicKey, signature, timestamp, window]
+      "signature": [this.config.publicKey, signature, timestamp.toString(), window.toString()]
     };
     privateStream.onopen = (_) => {
       console.log('Connected to BPX Websocket');
@@ -481,6 +481,7 @@ export class BackpackClient {
     privateStream.onerror = (error) => {
       console.log(`Websocket Error ${error}`);
     };
+
     return privateStream;
   }
 }
