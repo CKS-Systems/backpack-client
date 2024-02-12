@@ -1,6 +1,7 @@
 import got, { OptionsOfTextResponseBody } from "got";
 import crypto from "crypto";
 import qs from "qs";
+import WebSocket from 'ws';
 
 const BACKOFF_EXPONENT = 1.5;
 const DEFAULT_TIMEOUT_MS = 5_000;
