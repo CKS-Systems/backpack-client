@@ -1,6 +1,6 @@
 {
   "name": "@cks-systems/backpack-client",
-  "version": "3.0.7",
+  "version": "3.0.8",
   "description": "Backpack exchange typescript client",
   "main": "lib/backpack_client.js",
   "license": "MIT",
