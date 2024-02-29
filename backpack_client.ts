@@ -3,7 +3,6 @@ import crypto from "crypto";
 import qs from "qs";
 import WebSocket from 'ws';
 
-const BACKOFF_EXPONENT = 1.5;
 const DEFAULT_TIMEOUT_MS = 5_000;
 const BASE_URL = "https://api.backpack.exchange/";
 
@@ -144,7 +143,14 @@ const rawRequest = async (
       body: JSON.stringify(data),
     });
   }
-  const response = await got(fullUrl, options as OptionsOfTextResponseBody);
+  let response;
+  try {
+    response = await got(fullUrl, options as OptionsOfTextResponseBody);
+  } catch (err: any) {
+    if (err.response && err.response.body) {
+      console.log('Error', err.response.body);
+    }
+  }
   const contentType = response.headers["content-type"];
   if (contentType?.includes("application/json")) {
     const parsed = JSON.parse(response.body, function (_key, value) {
@@ -207,13 +213,11 @@ export class BackpackClient {
    * This method makes a public or private API request.
    * @param  {String}   method   The API method (public or private)
    * @param  {Object}   params   Arguments to pass to the api call
-   * @param  {Number}   retrysLeft
    * @return {Object}   The response object
    */
   private async api(
     method: string,
     params?: object,
-    retrysLeft: number = 0
   ): Promise<object> {
     try {
       if (instructions.public.has(method)) {
@@ -222,24 +226,15 @@ export class BackpackClient {
         return await this.privateMethod(method, params);
       }
     } catch (e: any) {
-      if (retrysLeft > 0) {
-        const numTry = 11 - retrysLeft;
-        const backOff = Math.pow(numTry, BACKOFF_EXPONENT);
-        console.warn(
-          "BPX api error",
-          {
-            method,
-            numTry,
-            backOff,
-          },
-          e.toString(),
-          e.response && e.response.body ? e.response.body : ''
-        );
-        await new Promise((resolve) => setTimeout(resolve, backOff * 1_000));
-        return await this.api(method, params, retrysLeft - 1);
-      } else {
-        throw e;
-      }
+      console.warn(
+        "BPX api error",
+        {
+          method,
+        },
+        e.toString(),
+        e.response && e.response.body ? e.response.body : ''
+      );
+      throw e;
     }
     throw new Error(method + " is not a valid API method.");
   }
@@ -386,7 +381,7 @@ export class BackpackClient {
   async ExecuteOrder(
     params: ExecuteOrderRequest
   ): Promise<ExecuteOrderResponse> {
-    return this.api("orderExecute", params, 0) as unknown as ExecuteOrderResponse;
+    return this.api("orderExecute", params) as unknown as ExecuteOrderResponse;
   }
   /**
    * https://docs.backpack.exchange/#tag/Order/operation/cancel_order
