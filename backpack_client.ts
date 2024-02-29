@@ -150,6 +150,7 @@ const rawRequest = async (
     if (err.response && err.response.body) {
       console.log('Error', err.response.body);
     }
+    throw err;
   }
   const contentType = response.headers["content-type"];
   if (contentType?.includes("application/json")) {
