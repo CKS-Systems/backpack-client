@@ -213,7 +213,7 @@ export class BackpackClient {
   private async api(
     method: string,
     params?: object,
-    retrysLeft: number = 10
+    retrysLeft: number = 0
   ): Promise<object> {
     try {
       if (instructions.public.has(method)) {
