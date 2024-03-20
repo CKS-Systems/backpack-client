@@ -611,9 +611,10 @@ export type FillHistoryRequest = {
   symbol?: string;
   limit?: number;
   offset?: number;
+  from?: number;
+  to?: number;
 };
 export type FillHistoryResponse = {
-  id: number;
   tradeId: number;
   orderId: number;
   symbol: string;
