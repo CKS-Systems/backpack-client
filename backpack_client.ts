@@ -506,6 +506,7 @@ export type LimitOrder = {
   executedQuantity: number;
   quoteQuantity: number;
   executedQuoteQuantity: number;
+  price: number;
   triggerPrice?: number;
   timeInForce: TimeInForce;
   selfTradePrevention: SelfTradePrevention;
