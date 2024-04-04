@@ -1,7 +1,7 @@
 import got, { OptionsOfTextResponseBody } from "got";
 import crypto from "crypto";
 import qs from "qs";
-import WebSocket from 'ws';
+import WebSocket from "ws";
 
 const DEFAULT_TIMEOUT_MS = 5_000;
 const BASE_URL = process.env.BPX_API_URL ?? "https://api.backpack.exchange/";
@@ -148,7 +148,7 @@ const rawRequest = async (
     response = await got(fullUrl, options as OptionsOfTextResponseBody);
   } catch (err: any) {
     if (err.response && err.response.body) {
-      console.log('Error', err.response.body);
+      console.log("Error", err.response.body);
     }
     throw err;
   }
@@ -216,10 +216,7 @@ export class BackpackClient {
    * @param  {Object}   params   Arguments to pass to the api call
    * @return {Object}   The response object
    */
-  private async api(
-    method: string,
-    params?: object,
-  ): Promise<object> {
+  private async api(method: string, params?: object): Promise<object> {
     try {
       if (instructions.public.has(method)) {
         return await this.publicMethod(method, params);
@@ -233,7 +230,7 @@ export class BackpackClient {
           method,
         },
         e.toString(),
-        e.response && e.response.body ? e.response.body : ''
+        e.response && e.response.body ? e.response.body : ""
       );
       throw e;
     }
@@ -450,12 +447,12 @@ export class BackpackClient {
     ) as unknown as HistoricalTradesResponse;
   }
 
- /**
+  /**
    * https://docs.backpack.exchange/#tag/Streams/Private
    * @return {Object} Websocket     Websocket connecting to order update stream
    */
   subscribeOrderUpdate(): WebSocket {
-    const privateStream = new WebSocket('wss://ws.backpack.exchange');
+    const privateStream = new WebSocket("wss://ws.backpack.exchange");
     const timestamp = Date.now();
     const window = 5_000;
     const signature = getMessageSignature(
@@ -466,12 +463,17 @@ export class BackpackClient {
       window
     );
     const subscriptionData = {
-      method: 'SUBSCRIBE',
+      method: "SUBSCRIBE",
       params: ["account.orderUpdate"],
-      "signature": [this.config.publicKey, signature, timestamp.toString(), window.toString()]
+      signature: [
+        this.config.publicKey,
+        signature,
+        timestamp.toString(),
+        window.toString(),
+      ],
     };
     privateStream.onopen = (_) => {
-      console.log('Connected to BPX Websocket');
+      console.log("Connected to BPX Websocket");
       privateStream.send(JSON.stringify(subscriptionData));
     };
     privateStream.onerror = (error) => {
@@ -506,6 +508,7 @@ export type LimitOrder = {
   executedQuantity: number;
   quoteQuantity: number;
   executedQuoteQuantity: number;
+  price: number;
   triggerPrice?: number;
   timeInForce: TimeInForce;
   selfTradePrevention: SelfTradePrevention;
@@ -586,6 +589,8 @@ export type WithdrawRequest = {
 };
 
 export type OrderHistoryRequest = {
+  orderId?: string;
+  symbol?: string;
   limit?: number;
   offset?: number;
 };
@@ -611,9 +616,10 @@ export type FillHistoryRequest = {
   symbol?: string;
   limit?: number;
   offset?: number;
+  from?: number;
+  to?: number;
 };
 export type FillHistoryResponse = {
-  id: number;
   tradeId: number;
   orderId: number;
   symbol: string;
