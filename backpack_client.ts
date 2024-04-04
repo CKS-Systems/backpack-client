@@ -4,7 +4,7 @@ import qs from "qs";
 import WebSocket from "ws";
 
 const DEFAULT_TIMEOUT_MS = 5_000;
-const BASE_URL = "https://api.backpack.exchange/";
+const BASE_URL = process.env.BPX_API_URL ?? "https://api.backpack.exchange/";
 
 const instructions = {
   public: new Map<string, { url: string; method: string }>([
