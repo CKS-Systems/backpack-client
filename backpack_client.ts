@@ -229,6 +229,8 @@ export class BackpackClient {
         {
           method,
         },
+        instructions.private.has(method) ? instructions.private.get(method)! :
+          (instructions.public.has(method) ? instructions.public.get(method)! : 'could not find method'),
         e.toString(),
         e.response && e.response.body ? e.response.body : ""
       );
@@ -241,13 +243,15 @@ export class BackpackClient {
    * This method makes a public API request.
    * @param  {String}   instruction   The API method (public or private)
    * @param  {Object}   params        Arguments to pass to the api call
+   * @param  {Object}   customHeaders Headers to pass to the api call
    * @return {Object}                 The response object
    */
   private async publicMethod(
     instruction: string,
-    params: object = {}
+    params: object = {},
+    customHeaders: any = {},
   ): Promise<object> {
-    const response = await rawRequest(instruction, {}, params);
+    const response = await rawRequest(instruction, customHeaders, params);
     return response;
   }
 
@@ -255,11 +259,13 @@ export class BackpackClient {
    * This method makes a private API request.
    * @param  {String}   instruction The API method (public or private)
    * @param  {Object}   params      Arguments to pass to the api call
+   * @param  {Object}   customHeaders Headers to pass to the api call
    * @return {Object}               The response object
    */
   private async privateMethod(
     instruction: string,
-    params: any = {}
+    params: any = {},
+    customHeaders: any = {},
   ): Promise<object> {
     const timestamp = Date.now();
     const signature = getMessageSignature(
@@ -275,7 +281,7 @@ export class BackpackClient {
       "X-Signature": signature,
     };
 
-    const response = await rawRequest(instruction, headers, params);
+    const response = await rawRequest(instruction, { ...headers, ...customHeaders}, params);
     return response;
   }
 
