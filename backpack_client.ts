@@ -243,6 +243,7 @@ export class BackpackClient {
    * This method makes a public API request.
    * @param  {String}   instruction   The API method (public or private)
    * @param  {Object}   params        Arguments to pass to the api call
+   * @param  {Object}   customHeaders Headers to pass to the api call
    * @return {Object}                 The response object
    */
   private async publicMethod(
@@ -258,6 +259,7 @@ export class BackpackClient {
    * This method makes a private API request.
    * @param  {String}   instruction The API method (public or private)
    * @param  {Object}   params      Arguments to pass to the api call
+   * @param  {Object}   customHeaders Headers to pass to the api call
    * @return {Object}               The response object
    */
   private async privateMethod(
