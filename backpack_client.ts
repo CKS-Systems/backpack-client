@@ -189,12 +189,15 @@ const rawRequest = async (
  * BackpackClient connects to the Backpack API
  * @param {string}        privateKey base64 encoded
  * @param {string}        publicKey  base64 encoded
+ * @param  {Object}       customHeaders Headers to pass to every api call
  */
 export class BackpackClient {
   public config: any;
+  private customHeaders: any;
 
-  constructor(privateKey: string, publicKey: string) {
+  constructor(privateKey: string, publicKey: string, customHeaders: any = {}) {
     this.config = { privateKey, publicKey };
+    this.customHeaders = customHeaders;
 
     // Verify that the keys are a correct pair before sending any requests. Ran
     // into errors before with that which were not obvious.
@@ -243,15 +246,13 @@ export class BackpackClient {
    * This method makes a public API request.
    * @param  {String}   instruction   The API method (public or private)
    * @param  {Object}   params        Arguments to pass to the api call
-   * @param  {Object}   customHeaders Headers to pass to the api call
    * @return {Object}                 The response object
    */
   private async publicMethod(
     instruction: string,
     params: object = {},
-    customHeaders: any = {},
   ): Promise<object> {
-    const response = await rawRequest(instruction, customHeaders, params);
+    const response = await rawRequest(instruction, this.customHeaders, params);
     return response;
   }
 
@@ -259,13 +260,11 @@ export class BackpackClient {
    * This method makes a private API request.
    * @param  {String}   instruction The API method (public or private)
    * @param  {Object}   params      Arguments to pass to the api call
-   * @param  {Object}   customHeaders Headers to pass to the api call
    * @return {Object}               The response object
    */
   private async privateMethod(
     instruction: string,
     params: any = {},
-    customHeaders: any = {},
   ): Promise<object> {
     const timestamp = Date.now();
     const signature = getMessageSignature(
@@ -281,7 +280,7 @@ export class BackpackClient {
       "X-Signature": signature,
     };
 
-    const response = await rawRequest(instruction, { ...headers, ...customHeaders}, params);
+    const response = await rawRequest(instruction, { ...headers, ...this.customHeaders}, params);
     return response;
   }
 
