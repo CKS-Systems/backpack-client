@@ -189,12 +189,21 @@ const rawRequest = async (
  * BackpackClient connects to the Backpack API
  * @param {string}        privateKey base64 encoded
  * @param {string}        publicKey  base64 encoded
+ * @param {object}        customHeaders custom headers for all requests
+ * @param {number}        windowMs timeout window for all requests in millis
  */
 export class BackpackClient {
-  public config: any;
+  private config: any;
+  private customHeaders: object;
 
-  constructor(privateKey: string, publicKey: string) {
-    this.config = { privateKey, publicKey };
+  constructor(
+    privateKey: string,
+    publicKey: string,
+    customHeaders: object = {},
+    windowMs: number = DEFAULT_TIMEOUT_MS,
+  ) {
+    this.config = { privateKey, publicKey, timeout: windowMs };
+    this.customHeaders = customHeaders;
 
     // Verify that the keys are a correct pair before sending any requests. Ran
     // into errors before with that which were not obvious.
@@ -243,15 +252,13 @@ export class BackpackClient {
    * This method makes a public API request.
    * @param  {String}   instruction   The API method (public or private)
    * @param  {Object}   params        Arguments to pass to the api call
-   * @param  {Object}   customHeaders Headers to pass to the api call
    * @return {Object}                 The response object
    */
   private async publicMethod(
     instruction: string,
     params: object = {},
-    customHeaders: any = {},
   ): Promise<object> {
-    const response = await rawRequest(instruction, customHeaders, params);
+    const response = await rawRequest(instruction, this.customHeaders, params);
     return response;
   }
 
@@ -259,29 +266,29 @@ export class BackpackClient {
    * This method makes a private API request.
    * @param  {String}   instruction The API method (public or private)
    * @param  {Object}   params      Arguments to pass to the api call
-   * @param  {Object}   customHeaders Headers to pass to the api call
    * @return {Object}               The response object
    */
   private async privateMethod(
     instruction: string,
     params: any = {},
-    customHeaders: any = {},
   ): Promise<object> {
     const timestamp = Date.now();
+    const window = this.config.timeout ?? DEFAULT_TIMEOUT_MS;
     const signature = getMessageSignature(
       params,
       this.config.privateKey,
       timestamp,
-      instruction
+      instruction,
+      window,
     );
     const headers = {
       "X-Timestamp": timestamp,
-      "X-Window": this.config.timeout ?? DEFAULT_TIMEOUT_MS,
+      "X-Window": window,
       "X-API-Key": this.config.publicKey,
       "X-Signature": signature,
     };
 
-    const response = await rawRequest(instruction, { ...headers, ...customHeaders}, params);
+    const response = await rawRequest(instruction, { ...headers, ...this.customHeaders}, params);
     return response;
   }
 
@@ -460,13 +467,13 @@ export class BackpackClient {
   subscribeOrderUpdate(): WebSocket {
     const privateStream = new WebSocket("wss://ws.backpack.exchange");
     const timestamp = Date.now();
-    const window = 5_000;
+    const window = this.config.timeout ?? DEFAULT_TIMEOUT_MS;
     const signature = getMessageSignature(
       {},
       this.config.privateKey,
       timestamp,
       "subscribe",
-      window
+      window,
     );
     const subscriptionData = {
       method: "SUBSCRIBE",
