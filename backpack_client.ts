@@ -193,13 +193,17 @@ const rawRequest = async (
  * @param {number}        windowMs timeout window for all requests in millis
  */
 export class BackpackClient {
-  private config: any;
-  private customHeaders: object;
+  private config: {
+    privateKey: string;
+    publicKey: string;
+    timeout: number;
+  };
+  private customHeaders: Record<string, string>;
 
   constructor(
     privateKey: string,
     publicKey: string,
-    customHeaders: object = {},
+    customHeaders: Record<string, string> = {},
     windowMs: number = DEFAULT_TIMEOUT_MS,
   ) {
     this.config = { privateKey, publicKey, timeout: windowMs };
